@@ -30,6 +30,6 @@ $ python clockwork.py "Ariabl'eyeS - Arcadia (Hey lululu) [Lunar Eclipse].osu" -
       i     | Bookmarks copied to clipboard. You can paste them directly into your .xml, right after the <Editor ... /> element.
 ```
 
-# To-do list
+## To-do list
 - [ ] support for more file formats (.sm, .qua are on my watchlist. Feel free to suggest other formats!)
 - [ ] direct injection of the timings into an already existing output file
