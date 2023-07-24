@@ -2,7 +2,13 @@
 A small CLI for timing conversion from osu! to Soundodger 2. I originally made this with only my own use in mind; thus, this tool only covers osu! to Soundodger 2 conversion, but I am planning to cover more music games in the future.
 
 ## Installation
-Installation is a little iffy right now... (placeholder)
+Clockwork can be installed with pip. To install, clone and move into the repository, and run the command:
+
+```
+pip install .
+```
+
+Sorry it's a little iffy right now, I'm still learning how to use setuptools... I will try to find a way to install it without having to clone the source code in the future.
 
 ## Usage
 ```
