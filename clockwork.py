@@ -171,16 +171,15 @@ def convert_osu_to_sd2(input_path: str, practice: bool = False):
 @click.command()
 @click.argument('input', type = click.Path())
 @click.option('--practice', is_flag = True, help = 'Make the bookmarks marked as practice points.')
-@click.option('--show', is_flag = True, help = 'Show the results of the conversion on the terminal.')
+@click.option('--show-result', is_flag = True, help = 'Show the results of the conversion on the terminal.')
+def cli(input, practice, show_result):
 
-
-def convert_command(input, practice, show):
     output = convert_osu_to_sd2(input, practice)
     logging.info('Successfully converted!')
 
-    if show:
-        print()
-        print(output)
+    if show_result:
+        click.echo()
+        click.echo(output)
 
     pyperclip.copy(output)
     logging.info('Bookmarks copied to clipboard. You can paste them directly into your .xml, right after the <Editor ... /> element.')
@@ -189,4 +188,4 @@ def convert_command(input, practice, show):
 
 # MAIN
 if __name__ == '__main__':
-    convert_command()
+    cli()
