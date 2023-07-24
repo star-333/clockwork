@@ -2,7 +2,7 @@
 A small CLI for timing conversion from osu! to Soundodger 2. I originally made this with only my own use in mind; thus, this tool only covers osu! to Soundodger 2 conversion, but I am planning to cover more music games in the future.
 
 ## Installation
-Installation is a little iffy right now...
+Installation is a little iffy right now... (placeholder)
 
 ## Usage
 ```

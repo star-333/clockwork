@@ -46,7 +46,7 @@ class Timing:
 
     def to_sd2(self, practice: bool = False) -> str:
         '''
-        Returns a string containing a soundodger bookmark with offset and BPM in its title.
+        Returns a string containing a single soundodger bookmark with offset and BPM in its title.
 
         OPTIONAL PARAMETERS:
         - prac: bool | whether or not the bookmarks will be practice points
@@ -66,7 +66,7 @@ class Timing:
     @classmethod
     def from_osu(cls, timing: str):
         '''
-        Takes an uninherited osu! timing and creates a BpmOffset instance from it.
+        Takes an uninherited osu! timing and creates a single BpmOffset instance from it.
         Please read the osu! documentation for more info: [https://osu.ppy.sh/wiki/en/Client/File_formats/osu_(file_format)#timing-points]
         ''' 
         timing_data = timing.split(',')
@@ -80,7 +80,7 @@ class Timing:
 
     def to_osu(self, volume: int = 80, sample_set: int = 0, sample_index: int = 0) -> str:
         '''
-        Returns a string containing an uninherited osu timing.
+        Returns a string containing a single uninherited osu timing.
 
         OPTIONAL ARGS:
         - volume: int | volume percentage for hit objects
