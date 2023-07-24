@@ -18,6 +18,7 @@ from convert import Convert
 @click.argument('input', type = click.Path())
 @click.option('--practice', is_flag = True, help = 'Make the bookmarks marked as practice points.')
 @click.option('--show-result', is_flag = True, help = 'Show the results of the conversion on the terminal.')
+@click.version_option()
 
 def cli(input, practice, show_result):
 
