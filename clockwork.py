@@ -172,9 +172,9 @@ def convert_osu_to_sd2(input_path: str, practice: bool = False):
 @click.argument('input', type = click.Path())
 @click.option('--practice', is_flag = True, help = 'Make the bookmarks marked as practice points.')
 @click.option('--show', is_flag = True, help = 'Show the results of the conversion on the terminal.')
-@click.version_option('0.1')
 
-def convert_command(input, practice, show, version):
+
+def convert_command(input, practice, show):
     output = convert_osu_to_sd2(input, practice)
     logging.info('Successfully converted!')
 
