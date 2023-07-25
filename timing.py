@@ -128,10 +128,10 @@ class Timing:
         Please read the osu! documentation for more info: [https://osu.ppy.sh/wiki/en/Client/File_formats/osu_(file_format)#timing-points]
         '''
         time = str(round(self.offset))
-        beat_length = str(self.beat_length())
+        beat_length = str(self.beat_length(self.bpm))
         meter = str(self.meter[0])
         
-        return f'{time},{beat_length},{meter},{sample_set},{sample_index},{volume},0,0'
+        return f'{time},{beat_length},{meter},{sample_set},{sample_index},{volume},1,0'
 
 
 

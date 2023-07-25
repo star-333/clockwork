@@ -1,5 +1,5 @@
 # clockwork
-A small CLI for timing conversion from osu! to Soundodger 2. I originally made this with only my own use in mind; thus, this tool only covers osu! to Soundodger 2 conversion, but I am planning to cover more music games in the future.
+A small CLI for timing conversion between various music games. Only Stepmania, osu! and Soundodger 2 are supported at the moment but I am planning to cover more in the future.
 
 ## Installation
 Clockwork can be installed with pip. To install, clone and move into the repository, and run the command:
@@ -8,27 +8,40 @@ Clockwork can be installed with pip. To install, clone and move into the reposit
 $ pip install .
 ```
 
-Sorry it's a little iffy right now, I'm still learning how to use setuptools... I will try to find a way to install it without having to clone the source code in the future.
+Sorry, it's a little iffy right now. I'm still learning how to use setuptools... I will try to find a way to install it without having to clone the source code in the future.
 
 ## Usage
 ```console
-$ clockwork "Ariabl'eyeS - Arcadia (Hey lululu) [Lunar Eclipse].osu" --show-result
+$ clockwork "test/osu/Ariabl'eyeS - Arcadia (Hey lululu) [Lunar Eclipse].osu" -i osu -o stepmania --show-result
+
       i     | Successfully converted!
+      i     | Tags copied to clipboard.
+      i     | You can paste them directly into your .sm/.ssc, right at the end of the first section.
+      i     | Be careful to remove the previous tags.
 
-<Bookmark time="3.72" col="FFFFFF" label="3.72 / 200.0" />
-<Bookmark time="293.688" col="FFFFFF" label="293.688 / 152.0" />
-<Bookmark time="294.872" col="FFFFFF" label="294.872 / 152.0" />
-<Bookmark time="313.819" col="FFFFFF" label="313.819 / 148.0" />
-<Bookmark time="314.224" col="FFFFFF" label="314.224 / 144.0" />
-<Bookmark time="314.64" col="FFFFFF" label="314.64 / 138.0" />
-<Bookmark time="315.074" col="FFFFFF" label="315.074 / 132.0" />
-<Bookmark time="315.528" col="FFFFFF" label="315.528 / 126.0" />
-<Bookmark time="316.004" col="FFFFFF" label="316.004 / 120.0" />
-<Bookmark time="316.504" col="FFFFFF" label="316.504 / 116.0" />
-<Bookmark time="317.021" col="FFFFFF" label="317.021 / 110.0" />
-
-      i     | Bookmarks copied to clipboard. You can paste them directly into your .xml, right after the <Editor ... /> element.
+#OFFSET:3.72;
+#BPMS:0.0=200.0
+,734.5856=152.0
+,737.5850666666666=152.0
+,784.321=148.0
+,785.293=144.0
+,786.2498=138.0
+,787.2046=132.0
+,788.158=126.0
+,789.11=120.0
+,790.0766666666667=116.0
+,791.0245=110.0
+;
 ```
+
+## Supported formats
+
+| Format | Game         | Support | Notes                                                                                                            |
+|--------|--------------|---------|------------------------------------------------------------------------------------------------------------------|
+| `.osu` | osu!         | Yes     | Will implement volume, sample set and sample index of timing points later                                        |
+| `.sm`  | Stepmania <5 | Yes     |                                                                                                                  |
+| `.ssc` | Stepmania 5  | Yes     | `.ssc` is built on top of `.sm` so timing points are the same                                                    |
+| `.xml` | Soundodger 2 | Partial | Only conversion from Soundodger 2 is missing, due to timing information being stored in a different header file. |
 
 ## To-do list
 - [ ] support for more file formats (.sm, .qua are on my watchlist. Feel free to suggest other formats!)

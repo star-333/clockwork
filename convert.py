@@ -117,6 +117,8 @@ class Convert:
         pyperclip.copy(res)
         log.info('[TimingPoints] copied to clipboard.\nYou can paste it directly into your .osu, right after the [Events] section.\nBe careful to remove the previous [TimingPoints] section.')
 
+        return res
+
 
     ### SOUNDODGER 2 ###
 
@@ -164,9 +166,12 @@ class Convert:
         sm_content = f.read()
         
         # offset
-        offset_rawstr = re.findall('#OFFSET:.*;', sm_content)[0]            # extract raw tag
-        offset_split = re.split('[,;:]', offset_rawstr)                     # split tag
-        offset = [x for x in offset_split if x][1]                          # extract relevant items
+        try:
+            offset_rawstr = re.findall('#OFFSET:.*;', sm_content)[0]        # extract raw tag
+            offset_split = re.split('[,;:]', offset_rawstr)                 # split tag
+            offset = [x for x in offset_split if x][1]                      # extract relevant items
+        except:
+            offset = '0.000000'
 
         #bpm
         bpm_rawstr = re.findall('#BPMS:[^;]*;', sm_content, re.DOTALL)[0]   # extract raw tag
@@ -196,5 +201,5 @@ class Convert:
 
 
 if __name__ == '__main__':
-    print(Convert.from_stepmania('test/sm/Otogibanashi ni makugire wo.sm'))
+    print(Convert.from_stepmania('test/sm/STEP MACHINE.sm'))
     print(Convert.to_stepmania(Convert.from_stepmania('test/sm/Otogibanashi ni makugire wo.sm')))
