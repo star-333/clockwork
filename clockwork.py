@@ -16,21 +16,20 @@ from convert import Convert
 # CLI
 @click.command()
 @click.argument('input', type = click.Path())
+@click.option('--from', help = 'Convert from this file format.')
+@click.option('--to', help = 'Convert to this file format.')
 @click.option('--practice', is_flag = True, help = 'Make the bookmarks marked as practice points.')
 @click.option('--show-result', is_flag = True, help = 'Show the results of the conversion on the terminal.')
 @click.version_option()
 
 def cli(input, practice, show_result):
+    click.echo()
 
-    output = Convert.osu_to_sd2(input, practice)
-    log.info('Successfully converted!')
+    output = Convert.to_sd2(Convert.from_osu(input))
 
     if show_result:
         click.echo()
         click.echo(output)
-
-    pyperclip.copy(output)
-    log.info('Bookmarks copied to clipboard. You can paste them directly into your .xml, right after the <Editor ... /> element.')
 
 
 

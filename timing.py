@@ -15,6 +15,7 @@ SD2_COLOR = 'FFFFFF'
 class Timing:
     '''
     An offset / BPM / meter group. The offset is in milliseconds.
+
     - self.offset: float
     - self.bpm: float
     - self.meter: tuple[int, int]
@@ -34,29 +35,38 @@ class Timing:
 
 
     @staticmethod
-    def to_bpm(beat_length: float, round: bool = True) -> float:
+    def bpm(beat_length: float, round_result: bool = True) -> float:
         '''
         Takes a beat length in ms and returns the corresponding BPM
+
         - beat_length: float | a beat length in ms
         - round: bool | if True, round to a 0.001 precision. If false, do nothing.
         '''
-        if round:
+        if round_result:
             return round(60000 / beat_length, 3)
         else:
             return 60000 / beat_length
 
-
-    def get_beat_length(self) -> float:
-        '''Returns the length of a corresponding beat in ms.'''
-        return 60000 / self.bpm
-
-
-    def beats_to_length(self, beat_amount: float):
+    @staticmethod
+    def beat_length(bpm: float, beat_amount: float | int = 1) -> float:
         '''
-        Returns the length of a certain amount of beats in a row in ms.
+        Returns the length of one or more beats in ms.
+
+        - bpm: float | BPM
         - beat_amount: float | the number of beats
         '''
-        return get_beat_length(self) * beat_amount
+        return (60000 / bpm) * beat_amount
+
+
+    @staticmethod
+    def beat_amount(bpm: float, duration: float) -> float:
+        '''
+        Takes a duration in ms and returns the corresponding amount of beats for a given BPM.
+
+        - bpm: float | BPM
+        - duration: float | a duration in ms
+        '''
+        return (duration * bpm) / 60000
 
 
     def get_offset_seconds(self) -> float:
@@ -65,7 +75,7 @@ class Timing:
 
 
     ### SOUNDODGER 2 ###
-    # contains no from_sd2() constructor because Soundodger 2 does not store timing information in .xml files.
+    # no from_sd2() constructor because Soundodger 2 does not store timing information in .xml files.
 
     def to_sd2(self, practice: bool = False) -> str:
         '''
@@ -92,6 +102,7 @@ class Timing:
     def from_osu(cls, timing: str) -> Callable:
         '''
         Takes a single uninherited osu! timing and creates a single Timing instance from it.
+
         - timing: str | a string containing an uninherited osu! timing
 
         Please read the osu! documentation for more info: [https://osu.ppy.sh/wiki/en/Client/File_formats/osu_(file_format)#timing-points]
@@ -100,7 +111,7 @@ class Timing:
 
         return cls(
             offset = float(timing_data[0]),
-            bpm = cls.to_bpm(float(timing_data[1])),
+            bpm = cls.bpm(float(timing_data[1])),
             meter = (int(timing_data[2]), 4)
         )
 
@@ -117,26 +128,113 @@ class Timing:
         Please read the osu! documentation for more info: [https://osu.ppy.sh/wiki/en/Client/File_formats/osu_(file_format)#timing-points]
         '''
         time = str(round(self.offset))
-        beat_length = str(self.get_beat_length())
+        beat_length = str(self.beat_length())
         meter = str(self.meter[0])
         
         return f'{time},{beat_length},{meter},{sample_set},{sample_index},{volume},0,0'
 
 
-    ### STEPMANIA .SM ###
-    # used in Stepmania <5
-
-    @classmethod
-    def from_sm(cls, timing: str) -> Callable:
-        '''
-        Takes a single Stepmania .sm timing point and creates a single Timing instance from it.
-        - timing: str | a string containing a .sm timing
-
-        Please read the .sm documentation for more info: [https://github.com/stepmania/stepmania/wiki/sm]
-        '''
-        pass
 
 # TIMINGLIST CLASS
-# used for file formats which use BPM 
-class TimingList:
-    pass
+class TimingList():
+    '''
+    A collection of functions used for file formats which use beats instead of offsets.
+    Constructor-like functions output list[Timing].
+    '''
+    
+    ### STEPMANIA ###
+    # supports .sm and .ssc
+
+    @staticmethod
+    def from_stepmania(offset: float, str_timings: list[str]) -> list[Timing]:
+        '''
+        Takes a list of Stepmania timing points and creates a list of Timing instances from it.
+        Works with .sm and .ssc formats.
+        NOTE: Only #BPMS is supported at the moment. #STOPS will be implemented in the future.
+
+        - offset: float | the initial offset in seconds.
+        - timings: list[str] | a list containing Stepmania timings (BPM changes)
+
+        Please read the Stepmania documentation for more info: 
+        [https://github.com/stepmania/stepmania/wiki/sm]
+        [https://github.com/stepmania/stepmania/wiki/ssc]
+        '''
+        # convert the offset to milliseconds
+        time = offset * 1000 
+        res = []
+        # turn the timings into usable data
+        timings_split = [
+            [float(val) for val in t.split('=')]
+            for t in str_timings
+        ]
+
+        # i have no idea why this works
+        res.append(Timing(time, timings_split[0][1]))
+        
+        for i in range(len(timings_split) - 1):
+
+            current_bpm = timings_split[i][1]
+            # add the time elapsed since the last bpm change
+            time += Timing.beat_length(
+                bpm = current_bpm,
+                beat_amount = timings_split[i+1][0] - timings_split[i][0]
+            )
+            res.append(Timing(time, current_bpm))
+
+        return res
+        
+
+    @staticmethod
+    def to_stepmania(timings: list[Timing]) -> tuple[str, str]:
+        '''
+        Takes a list of Timing instances and returns a tuple of strings containing Stepmania #OFFSET and #BPM tags.
+        Works with .sm and .ssc formats.
+        NOTE: Only #BPMS is supported at the moment. #STOPS will be implemented in the future.
+
+        - timings: list[Timing] | a list of Timing instances
+
+        Please read the Stepmania documentation for more info: 
+        [https://github.com/stepmania/stepmania/wiki/sm]
+        [https://github.com/stepmania/stepmania/wiki/ssc]
+        '''
+        # offset
+        offset_tag = f'#OFFSET:{timings[0].offset / 1000};'
+        
+        # header
+        header_tag = '#BPMS:'
+        total_beats = 0.0
+        
+        # create list of beats
+        beat_list = [0.0]
+        for i in range(1, len(timings)):         
+            current_timing = timings[i]
+        
+            total_beats += Timing.beat_amount(current_timing.bpm, current_timing.offset - timings[i-1].offset)
+            beat_list += [total_beats]
+        
+        # make header
+        for i in range(len(beat_list)):
+            header_tag += f'{beat_list[i]}={timings[i].bpm}\n,'
+
+        header_tag = header_tag[:-1] + ';'
+
+        return header_tag, offset_tag
+
+
+
+if __name__ == '__main__':
+    test_data = [
+        '0.000000=165.000000',
+        '32.000000=160.000000',
+        '33.000000=148.000000',
+        '34.000000=131.000000',
+        '36.000000=164.000000',
+        '39.000000=169.000000',
+        '40.500000=203.000000',
+    ]
+
+    fr = TimingList.from_stepmania(0.0, test_data)
+    log.debug(fr)
+
+    to = TimingList.to_stepmania(fr)
+    log.d(to)
