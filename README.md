@@ -4,14 +4,14 @@ A small CLI for timing conversion from osu! to Soundodger 2. I originally made t
 ## Installation
 Clockwork can be installed with pip. To install, clone and move into the repository, and run the command:
 
-```
-pip install .
+```console
+$ pip install .
 ```
 
 Sorry it's a little iffy right now, I'm still learning how to use setuptools... I will try to find a way to install it without having to clone the source code in the future.
 
 ## Usage
-```
+```console
 $ clockwork "Ariabl'eyeS - Arcadia (Hey lululu) [Lunar Eclipse].osu" --show-result
       i     | Successfully converted!
 
