@@ -9,13 +9,16 @@ SD2_COLOR = 'FFFFFF'
 
 
 
-# BPMOFFSET CLASS / TIMING FUNCTIONS
+# TIMING CLASS
+# contains the Timing class as well as various utility functions that have to do with timing.
 class Timing:
     '''
     An offset / BPM / meter group. The offset is in milliseconds.
     - self.offset: float
     - self.bpm: float
     - self.meter: tuple[int, int]
+
+    This class contains constructors, methods as well as various utility functions.
     '''
 
     def __init__(self, offset: float, bpm: float, meter: tuple[int, int] = (4,4)):
@@ -25,6 +28,7 @@ class Timing:
 
 
     def __repr__(self):
+        # print function
         return f'BpmOffset / {str(self.offset)} / {str(self.bpm)} / {str(self.meter)}'
 
 
@@ -43,6 +47,9 @@ class Timing:
         '''Returns the offset in seconds.'''
         return self.offset / 1000
 
+
+    ### SOUNDODGER 2 ###
+    # contains no from_sd2() constructor because Soundodger 2 does not store timing information in .xml files.
 
     def to_sd2(self, practice: bool = False) -> str:
         '''
@@ -63,6 +70,8 @@ class Timing:
         return f'<Bookmark time="{time}" col="{col}" label="{label}" {prac}/>'
 
     
+    ### OSU ###
+
     @classmethod
     def from_osu(cls, timing: str):
         '''
