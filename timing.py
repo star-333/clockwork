@@ -3,6 +3,7 @@ import click
 import pyperclip
 from sys import platform
 from zenlog import log
+from typing import Callable
 
 # CONSTANTS
 SD2_COLOR = 'FFFFFF'
@@ -29,13 +30,20 @@ class Timing:
 
     def __repr__(self):
         # print function
-        return f'BpmOffset / {str(self.offset)} / {str(self.bpm)} / {str(self.meter)}'
+        return f'Timing / {str(self.offset)} / {str(self.bpm)} / {str(self.meter)}'
 
 
     @staticmethod
-    def to_bpm(beat_length: float) -> float:
-        '''Takes a beat length in ms and returns the corresponding BPM'''
-        return round(60000 / beat_length, 3)
+    def to_bpm(beat_length: float, round: bool = True) -> float:
+        '''
+        Takes a beat length in ms and returns the corresponding BPM
+        - beat_length: float | a beat length in ms
+        - round: bool | if True, round to a 0.001 precision. If false, do nothing.
+        '''
+        if round:
+            return round(60000 / beat_length, 3)
+        else:
+            return 60000 / beat_length
 
 
     def get_beat_length(self) -> float:
@@ -43,7 +51,15 @@ class Timing:
         return 60000 / self.bpm
 
 
-    def get_seconds(self) -> float:
+    def beats_to_length(self, beat_amount: float):
+        '''
+        Returns the length of a certain amount of beats in a row in ms.
+        - beat_amount: float | the number of beats
+        '''
+        return get_beat_length(self) * beat_amount
+
+
+    def get_offset_seconds(self) -> float:
         '''Returns the offset in seconds.'''
         return self.offset / 1000
 
@@ -58,7 +74,7 @@ class Timing:
         OPTIONAL PARAMETERS:
         - prac: bool | whether or not the bookmarks will be practice points
         '''
-        time = str(self.get_seconds())
+        time = str(self.get_offset_seconds())
         col = SD2_COLOR
         label = f'{time} / {str(self.bpm)}'
         
@@ -73,9 +89,11 @@ class Timing:
     ### OSU ###
 
     @classmethod
-    def from_osu(cls, timing: str):
+    def from_osu(cls, timing: str) -> Callable:
         '''
-        Takes an uninherited osu! timing and creates a single BpmOffset instance from it.
+        Takes a single uninherited osu! timing and creates a single Timing instance from it.
+        - timing: str | a string containing an uninherited osu! timing
+
         Please read the osu! documentation for more info: [https://osu.ppy.sh/wiki/en/Client/File_formats/osu_(file_format)#timing-points]
         ''' 
         timing_data = timing.split(',')
@@ -103,3 +121,22 @@ class Timing:
         meter = str(self.meter[0])
         
         return f'{time},{beat_length},{meter},{sample_set},{sample_index},{volume},0,0'
+
+
+    ### STEPMANIA .SM ###
+    # used in Stepmania <5
+
+    @classmethod
+    def from_sm(cls, timing: str) -> Callable:
+        '''
+        Takes a single Stepmania .sm timing point and creates a single Timing instance from it.
+        - timing: str | a string containing a .sm timing
+
+        Please read the .sm documentation for more info: [https://github.com/stepmania/stepmania/wiki/sm]
+        '''
+        pass
+
+# TIMINGLIST CLASS
+# used for file formats which use BPM 
+class TimingList:
+    pass
