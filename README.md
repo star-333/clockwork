@@ -8,6 +8,8 @@ Clockwork can be installed with pip. To install, clone and move into the reposit
 $ pip install .
 ```
 
+> Once installed, clockwork can only be run in the source code's directory for some reason. I'll look into it but for now it's kind of broken
+
 Sorry it's a little iffy right now, I'm still learning how to use setuptools... I will try to find a way to install it without having to clone the source code in the future.
 
 ## Usage
