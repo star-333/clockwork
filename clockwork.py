@@ -36,29 +36,42 @@ from convert import Convert
     help = 'Show the results of the conversion on the terminal.'
 )
 
-# # sd2
-# @click.option('--practice',
-#     is_flag = True, 
-#     help = 'Make the bookmarks marked as practice points.'
-# )
+# sd2
+@click.option('--practice/--no-practice',
+    is_flag = True,
+    prompt = 'Make the bookmarks into practice points?'
+)
 
 # cli command
-def cli(input, in_format, out_format, show_result):
+def cli(input, in_format, out_format, show_result, practice):
 
     click.echo()
 
     # FIRST PASS: convert to Timing instances
-    if in_format == 'osu': first_pass = Convert.from_osu(input)
-    elif in_format == 'stepmania': first_pass = Convert.from_stepmania(input)
+    if in_format == 'osu': 
+        first_pass = Convert.from_osu(input)
+
+    elif in_format == 'stepmania': 
+        first_pass = Convert.from_stepmania(input)
+
 
     # SECOND PASS: convert to file snippets
-    if out_format == 'osu': second_pass = Convert.to_osu(first_pass) # implement volume, sample_set, sample_index later
-    elif out_format == 'stepmania': second_pass = Convert.to_stepmania(first_pass)
-    elif out_format == 'sd2': second_pass = Convert.to_sd2(first_pass)
+    if out_format == 'osu': 
+        second_pass = Convert.to_osu(first_pass) # implement volume, sample_set, sample_index later
+
+    elif out_format == 'stepmania':
+        second_pass = Convert.to_stepmania(first_pass)
+
+    elif out_format == 'sd2':
+        if practice: second_pass = Convert.to_sd2(first_pass, practice = True)
+        else: second_pass = Convert.to_sd2(first_pass)
+        
 
     if show_result:
         click.echo()
         click.echo(second_pass)
+
+
 
 # MAIN
 if __name__ == '__main__':
