@@ -1,6 +1,7 @@
 # MODULES
 import click
 import pyperclip
+import re
 from sys import platform
 from zenlog import log
 from typing import Callable
@@ -99,7 +100,7 @@ class Timing:
     ### OSU ###
 
     @classmethod
-    def from_osu(cls, timing: str) -> Callable:
+    def from_osu(cls, str_timing: str) -> Callable:
         '''
         Takes a single uninherited osu! timing and creates a single Timing instance from it.
 
@@ -107,7 +108,7 @@ class Timing:
 
         Please read the osu! documentation for more info: [https://osu.ppy.sh/wiki/en/Client/File_formats/osu_(file_format)#timing-points]
         ''' 
-        timing_data = timing.split(',')
+        timing_data = str_timing.split(',')
 
         return cls(
             offset = float(timing_data[0]),
@@ -132,6 +133,26 @@ class Timing:
         meter = str(self.meter[0])
         
         return f'{time},{beat_length},{meter},{sample_set},{sample_index},{volume},1,0'
+
+
+    ### QUAVER ###
+
+    @classmethod
+    def from_quaver(cls, str_timing: str) -> Callable:
+        '''
+        Takes a single Quaver timing point and creates a single timing instance from it.
+        '''
+        # split lines and strip unnecessary data
+        timing_split = [s.strip('- ') for s in str_timing.split('\n')]
+        # remove empty strings
+        timing_split = [x for x in timing_split if x]
+        # remove keys
+        timing_split2 = [float(re.sub('[a-zA-Z: ]', '', s)) for s in timing_split]
+
+        return cls(
+            offset = timing_split2[0], 
+            bpm = timing_split2[1]
+        )
 
 
 
@@ -223,18 +244,23 @@ class TimingList():
 
 
 if __name__ == '__main__':
-    test_data = [
-        '0.000000=165.000000',
-        '32.000000=160.000000',
-        '33.000000=148.000000',
-        '34.000000=131.000000',
-        '36.000000=164.000000',
-        '39.000000=169.000000',
-        '40.500000=203.000000',
-    ]
+    # test_data = [
+    #     '0.000000=165.000000',
+    #     '32.000000=160.000000',
+    #     '33.000000=148.000000',
+    #     '34.000000=131.000000',
+    #     '36.000000=164.000000',
+    #     '39.000000=169.000000',
+    #     '40.500000=203.000000',
+    # ]
 
-    fr = TimingList.from_stepmania(0.0, test_data)
-    log.debug(fr)
+    # fr = TimingList.from_stepmania(0.0, test_data)
+    # log.debug(fr)
 
-    to = TimingList.to_stepmania(fr)
-    log.d(to)
+    # to = TimingList.to_stepmania(fr)
+    # log.d(to)
+
+    test_data = '''- StartTime: 2503\n  Bpm: 148.02000427246094\n'''
+
+    fr = Timing.from_quaver(test_data)
+    print(fr)
