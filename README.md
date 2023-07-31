@@ -41,6 +41,7 @@ $ clockwork "test/osu/Ariabl'eyeS - Arcadia (Hey lululu) [Lunar Eclipse].osu" -i
 | `.osu` | osu!         | Yes     | Will implement volume, sample set and sample index of timing points later                                        |
 | `.sm`  | Stepmania <5 | Partial | Stops not implemented yet                                                                                        |
 | `.ssc` | Stepmania 5  | Partial | `.ssc` is built on top of `.sm` so timing points are the same                                                    |
+| `.qua` | Quaver       | Partial | Meter not yet supported                                                                                          |
 | `.xml` | Soundodger 2 | Partial | Only conversion from Soundodger 2 is missing, due to timing information being stored in a different header file. |
 
 ## To-do list
