@@ -140,7 +140,7 @@ class Timing:
     @classmethod
     def from_quaver(cls, str_timing: str) -> Callable:
         '''
-        Takes a single Quaver timing point and creates a single timing instance from it.
+        Takes a single Quaver timing point and creates a single Timing instance from it.
         '''
         # split lines and strip unnecessary data
         timing_split = [s.strip('- ') for s in str_timing.split('\n')]
@@ -153,6 +153,18 @@ class Timing:
             offset = timing_split2[0], 
             bpm = timing_split2[1]
         )
+
+
+    def to_quaver(self) -> str:
+        '''
+        Returns a string containing a single Quaver timing.
+        '''
+        res = f'- StartTime: {self.offset}\n  Bpm: {self.bpm}\n'
+        
+        if self.meter != (4, 4):
+            res += f'  Meter: {self.meter[0]}\n'
+
+        return res
 
 
 
@@ -264,3 +276,5 @@ if __name__ == '__main__':
 
     fr = Timing.from_quaver(test_data)
     print(fr)
+    to = fr.to_quaver()
+    print(to)
