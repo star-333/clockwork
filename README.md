@@ -12,26 +12,15 @@ Sorry, it's a little iffy right now. I'm still learning how to use setuptools...
 
 ## Usage
 ```console
-$ clockwork "test/osu/Ariabl'eyeS - Arcadia (Hey lululu) [Lunar Eclipse].osu" -i osu -o stepmania --show-result
+$ clockwork "test/sm/STEP MACHINE.sm" -i stepmania -o osu --show-result
 
       i     | Successfully converted!
-      i     | Tags copied to clipboard.
-      i     | You can paste them directly into your .sm/.ssc, right at the end of the first section.
-      i     | Be careful to remove the previous tags.
+      i     | [TimingPoints] copied to clipboard.
+      i     | You can paste it directly into your .osu, right after the [Events] section.
+      i     | Be careful to remove the previous [TimingPoints] section.
 
-#OFFSET:3.72;
-#BPMS:0.0=200.0
-,734.5856=152.0
-,737.5850666666666=152.0
-,784.321=148.0
-,785.293=144.0
-,786.2498=138.0
-,787.2046=132.0
-,788.158=126.0
-,789.11=120.0
-,790.0766666666667=116.0
-,791.0245=110.0
-;
+[TimingPoints]
+0,375.0,4,0,0,80,1,0
 ```
 
 ## Supported formats
