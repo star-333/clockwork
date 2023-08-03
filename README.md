@@ -28,7 +28,7 @@ $ clockwork "test/sm/STEP MACHINE.sm" -i stepmania -o osu --show-result
 | Format | Game         | Support | Notes                                                                                                            |
 |--------|--------------|---------|------------------------------------------------------------------------------------------------------------------|
 | `.osu` | osu!         | Yes     | Will implement volume, sample set and sample index of timing points later                                        |
-| `.sm`  | Stepmania <5 | Partial | Stops not implemented yet                                                                                        |
+| `.sm`  | Stepmania <5 | Partial | Stops not implemented yet. Conversion to Stepmania output is broken atm                                          |
 | `.ssc` | Stepmania 5  | Partial | `.ssc` is built on top of `.sm` so timing points are the same                                                    |
 | `.xml` | Soundodger 2 | Partial | Only conversion from Soundodger 2 is missing, due to timing information being stored in a different header file. |
 
