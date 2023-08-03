@@ -161,8 +161,8 @@ class Timing:
             meter_denominator = int(timing_dict['Meter'])
         
         return cls(
-            offset = timing_dict['StartTime'],
-            bpm = timing_dict['Bpm'],
+            offset = float(timing_dict['StartTime']),
+            bpm = float(timing_dict['Bpm']),
             meter = (meter_denominator, 4)
         )
 

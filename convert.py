@@ -114,7 +114,9 @@ class Convert:
         log.info('Successfully converted!')
 
         pyperclip.copy(res)
-        log.info('[TimingPoints] copied to clipboard.\nYou can paste it directly into your .osu, right after the [Events] section.\nBe careful to remove the previous [TimingPoints] section.')
+        log.info('[TimingPoints] copied to clipboard.')
+        log.info('You can paste it directly into your .osu, right after the [Events] section.')
+        log.info('Be careful to remove the previous [TimingPoints] section.')
 
         return res
 
@@ -139,7 +141,8 @@ class Convert:
         log.info('Successfully converted!')
         
         pyperclip.copy(res)
-        log.info('Bookmarks copied to clipboard.\nYou can paste them directly into your .xml, right after the <Editor ... /> element.')
+        log.info('Bookmarks copied to clipboard.')
+        log.info('You can paste them directly into your .xml, right after the "<Editor ... />" element.')
 
         return res
 
@@ -187,6 +190,10 @@ class Convert:
         Takes a list of Timing instances and generates a .sm/.ssc snippet with the corresponding bookmarks.
 
         - timings: list[Timings] | a list of Timing instances
+
+        Please read the Stepmania documentation for more info: 
+        [https://github.com/stepmania/stepmania/wiki/sm]
+        [https://github.com/stepmania/stepmania/wiki/ssc]
         '''
         content = TimingList.to_stepmania(timings)
         res = f'{content[1]}\n{content[0]}'
@@ -194,7 +201,9 @@ class Convert:
         log.info('Successfully converted!')
         
         pyperclip.copy(res)
-        log.info('Tags copied to clipboard.\nYou can paste them directly into your .sm/.ssc, right at the end of the first section.\nBe careful to remove the previous tags.')
+        log.info('Tags copied to clipboard.')
+        log.info('You can paste them directly into your .sm/.ssc, right at the end of the first section.')
+        log.info('Be careful to remove the previous tags.')
 
         return res
 
@@ -223,7 +232,32 @@ class Convert:
         f.close()
         return [Timing.from_quaver(t) for t in timings_split]
 
+    
+    @staticmethod
+    def to_quaver(timings: list[Timing]) -> str:
+        '''
+        Takes a list of Timing instances and generates a .qua snippet with the corresponding bookmarks.
+
+        - timings: list[Timings] | a list of Timing instances
+
+        Please read the Quaver API source code for more info:
+        [https://github.com/Quaver/Quaver.API/blob/master/Quaver.API/Maps/Qua.cs]
+        '''
+        res = ''
+
+        for t in timings:
+            res += t.to_quaver()
+
+        log.info('Successfully converted!')
+        
+        pyperclip.copy(res)
+        log.info('Timings copied to clipboard.')
+        log.info('You can paste them directly into your .qua, right after the "SoundEffects: ..." element.')
+        log.info('Be careful to remove the previous timings.')
+
+        return res
+
 
 
 if __name__ == '__main__':
-    print(Convert.from_quaver('test/qua/14509.qua'))
+    print(Convert.to_quaver(Convert.from_quaver('test/qua/14509.qua')))
