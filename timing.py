@@ -284,9 +284,11 @@ if __name__ == '__main__':
     # to = TimingList.to_stepmania(fr)
     # log.d(to)
 
-    test_data = '''- StartTime: 2503\n  Bpm: 148.02000427246094\n  Meter: 4\n'''
+    # test_data = '''StartTime: 2503\n Bpm: 148.02000427246094\n     Meter: 4\n'''
 
-    fr = Timing.from_quaver(test_data)
-    print(fr)
-    to = fr.to_quaver()
-    print(to)
+    # fr = Timing.from_quaver(test_data)
+    # print(fr)
+    # to = fr.to_quaver()
+    # print(to)
+    
+    pass

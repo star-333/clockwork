@@ -91,7 +91,6 @@ class Convert:
         for timing in osu_uninherited:
             timing_list.append(Timing.from_osu(timing))
 
-        # close .osu file
         f.close()
         return timing_list
 
@@ -177,7 +176,8 @@ class Convert:
         bpm_rawstr = re.findall('#BPMS:[^;]*;', sm_content, re.DOTALL)[0]   # extract raw tag
         bpm_split = re.split('[,;:\s]', bpm_rawstr)                         # split tag
         bpm = [x for x in bpm_split if x][1:]                               # extract relevant items
-
+        
+        f.close()
         return TimingList.from_stepmania(float(offset), bpm)
     
 
@@ -198,8 +198,32 @@ class Convert:
 
         return res
 
+    
+    ### QUAVER ###
+    @staticmethod
+    def from_quaver(input_path: str) -> list[Timing]:
+        '''
+        Takes a .qua file and returns a list of Timings accordingly.
+
+        - input_path: str | the path towards the .sm/.ssc file
+
+        Please read the Quaver API source code for more info:
+        [https://github.com/Quaver/Quaver.API/blob/master/Quaver.API/Maps/Qua.cs]
+        '''
+        check_format(input_path, 'qua')
+        f = open_file(input_path)
+
+        qua_content = f.read()
+
+        timings_rawstr = re.findall('TimingPoints.*SliderVelocities', qua_content, re.DOTALL)[0]        # extract raw string
+        timings_rawstr = re.sub('TimingPoints:\n', '', timings_rawstr)                                  # remove unnecessary info
+        timings_rawstr = re.sub('SliderVelocities', '', timings_rawstr)                                 # remove unnecessary info
+        timings_split = timings_rawstr.split('- ')[1:]
+        
+        f.close()
+        return [Timing.from_quaver(t) for t in timings_split]
+
 
 
 if __name__ == '__main__':
-    print(Convert.from_stepmania('test/sm/STEP MACHINE.sm'))
-    print(Convert.to_stepmania(Convert.from_stepmania('test/sm/Otogibanashi ni makugire wo.sm')))
+    print(Convert.from_quaver('test/qua/14509.qua'))
