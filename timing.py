@@ -1,6 +1,7 @@
 # MODULES
 import click
 import pyperclip
+import re
 from sys import platform
 from zenlog import log
 from typing import Callable
@@ -99,7 +100,7 @@ class Timing:
     ### OSU ###
 
     @classmethod
-    def from_osu(cls, timing: str) -> Callable:
+    def from_osu(cls, osu_timing: str) -> Callable:
         '''
         Takes a single uninherited osu! timing and creates a single Timing instance from it.
 
@@ -107,7 +108,7 @@ class Timing:
 
         Please read the osu! documentation for more info: [https://osu.ppy.sh/wiki/en/Client/File_formats/osu_(file_format)#timing-points]
         ''' 
-        timing_data = timing.split(',')
+        timing_data = osu_timing.split(',')
 
         return cls(
             offset = float(timing_data[0]),
@@ -134,6 +135,50 @@ class Timing:
         return f'{time},{beat_length},{meter},{sample_set},{sample_index},{volume},1,0'
 
 
+    ### QUAVER ###
+
+    @classmethod
+    def from_quaver(cls, qua_timing: str) -> Callable:
+        '''
+        Takes a single Quaver timing point and creates a single Timing instance from it.
+        '''
+        # split lines and strip unnecessary data
+        timing_data = [s.strip('- ') for s in qua_timing.split('\n')]
+        # remove empty strings
+        timing_data = [s.split(':') for s in timing_data if s]
+        # convert to dict (easier to work with)
+        timing_dict = {
+            x[0]: x[1].strip(' ')
+            for x in timing_data
+        }
+
+        # meter
+        if 'Meter' not in timing_dict:
+            meter_denominator = 4
+        elif timing_dict['Meter'] == 'Triple':
+            meter_denominator = 3
+        else:
+            meter_denominator = int(timing_dict['Meter'])
+        
+        return cls(
+            offset = float(timing_dict['StartTime']),
+            bpm = float(timing_dict['Bpm']),
+            meter = (meter_denominator, 4)
+        )
+
+
+    def to_quaver(self) -> str:
+        '''
+        Returns a string containing a single Quaver timing.
+        '''
+        res = f'- StartTime: {self.offset}\n  Bpm: {self.bpm}\n'
+        
+        if self.meter != (4, 4):
+            res += f'  Meter: {self.meter[0]}\n'
+
+        return res
+
+
 
 # TIMINGLIST CLASS
 class TimingList():
@@ -146,7 +191,7 @@ class TimingList():
     # supports .sm and .ssc
 
     @staticmethod
-    def from_stepmania(offset: float, str_timings: list[str]) -> list[Timing]:
+    def from_stepmania(offset: float, sm_timings: list[str]) -> list[Timing]:
         '''
         Takes a list of Stepmania timing points and creates a list of Timing instances from it.
         Works with .sm and .ssc formats.
@@ -165,7 +210,7 @@ class TimingList():
         # turn the timings into usable data
         timings_split = [
             [float(val) for val in t.split('=')]
-            for t in str_timings
+            for t in sm_timings
         ]
 
         # i have no idea why this works
@@ -223,18 +268,27 @@ class TimingList():
 
 
 if __name__ == '__main__':
-    test_data = [
-        '0.000000=165.000000',
-        '32.000000=160.000000',
-        '33.000000=148.000000',
-        '34.000000=131.000000',
-        '36.000000=164.000000',
-        '39.000000=169.000000',
-        '40.500000=203.000000',
-    ]
+    # test_data = [
+    #     '0.000000=165.000000',
+    #     '32.000000=160.000000',
+    #     '33.000000=148.000000',
+    #     '34.000000=131.000000',
+    #     '36.000000=164.000000',
+    #     '39.000000=169.000000',
+    #     '40.500000=203.000000',
+    # ]
 
-    fr = TimingList.from_stepmania(0.0, test_data)
-    log.debug(fr)
+    # fr = TimingList.from_stepmania(0.0, test_data)
+    # log.debug(fr)
 
-    to = TimingList.to_stepmania(fr)
-    log.d(to)
+    # to = TimingList.to_stepmania(fr)
+    # log.d(to)
+
+    # test_data = '''StartTime: 2503\n Bpm: 148.02000427246094\n     Meter: 4\n'''
+
+    # fr = Timing.from_quaver(test_data)
+    # print(fr)
+    # to = fr.to_quaver()
+    # print(to)
+    
+    pass
