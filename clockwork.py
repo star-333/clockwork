@@ -1,6 +1,4 @@
-# clockwork v0.1
-# requires python 3.6 or higher, click, pyperclip. zenlog is recommended but not required
-# i should probably check [https://github.com/SaxxonPike/rhythm-game-formats/tree/master] too
+# clockwork v0.3.0
 
 # MODULES
 import click
