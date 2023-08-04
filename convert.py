@@ -1,11 +1,12 @@
 # MODULES
 import click
 import pyperclip
+from decimal import *
 from sys import platform
 from zenlog import log
 import re
 # local
-from timing import Timing, TimingList
+from timing import Timing, TimingList, STEP128
 
 
 
@@ -185,7 +186,7 @@ class Convert:
     
 
     @staticmethod
-    def to_stepmania(timings: list[Timing]) -> str:
+    def to_stepmania(timings: list[Timing], step: Decimal = STEP128) -> str:
         '''
         Takes a list of Timing instances and generates a .sm/.ssc snippet with the corresponding bookmarks.
 
@@ -195,7 +196,7 @@ class Convert:
         [https://github.com/stepmania/stepmania/wiki/sm]
         [https://github.com/stepmania/stepmania/wiki/ssc]
         '''
-        content = TimingList.to_stepmania(timings)
+        content = TimingList.to_stepmania(timings, step)
         res = f'{content[1]}\n{content[0]}'
         
         log.info('Successfully converted!')
@@ -260,4 +261,4 @@ class Convert:
 
 
 if __name__ == '__main__':
-    print(Convert.to_stepmania(Convert.from_osu("test/osu/Kashiwa Daisuke - Red Skirts (hehe) [Plaid Jazz].osu")))
+    print(Convert.to_stepmania(Convert.from_quaver("test/qua/14509.qua"), Decimal('1.0')))

@@ -1,13 +1,30 @@
 # MODULES
 import click
 import pyperclip
-import re
+from decimal import *
 from sys import platform
 from zenlog import log
 from typing import Callable
 
 # CONSTANTS
 SD2_COLOR = 'FFFFFF'
+STEP128 = Decimal('0.0078125')
+
+# DECIMAL CONTEXT
+# for 1/128 subdivisions. fuck 1/192ths they don't translate well into decimals
+getcontext().prec = 7
+
+
+
+# UTILS
+def quantize_value(val: Decimal, step: Decimal):
+    '''
+    Quantizes a given value based on step size.
+
+    - val: Decimal | the value to quantize.
+    - step: Decimal | the step size to use.
+    '''
+    return round(val / step, 0) * step
 
 
 
@@ -24,7 +41,7 @@ class Timing:
     This class contains constructors, methods as well as various utility functions.
     '''
 
-    def __init__(self, offset: float, bpm: float, meter: tuple[int, int] = (4,4)):
+    def __init__(self, offset: Decimal, bpm: Decimal, meter: tuple[int, int] = (4,4)):
         self.offset = offset
         self.bpm = bpm
         self.meter = meter
@@ -36,7 +53,7 @@ class Timing:
 
 
     @staticmethod
-    def bpm(beat_length: float, round_result: bool = True) -> float:
+    def bpm(beat_length: Decimal, round_result: bool = True) -> Decimal:
         '''
         Takes a beat length in ms and returns the corresponding BPM
 
@@ -49,7 +66,7 @@ class Timing:
             return 60000 / beat_length
 
     @staticmethod
-    def beat_length(bpm: float, beat_amount: float | int = 1) -> float:
+    def beat_length(bpm: Decimal, beat_amount: Decimal | int = 1) -> Decimal:
         '''
         Returns the length of one or more beats in ms.
 
@@ -60,7 +77,7 @@ class Timing:
 
 
     @staticmethod
-    def beat_amount(bpm: float, duration: float) -> float:
+    def beat_amount(bpm: Decimal, duration: Decimal) -> Decimal:
         '''
         Takes a duration in ms and returns the corresponding amount of beats for a given BPM.
 
@@ -70,7 +87,7 @@ class Timing:
         return (duration * bpm) / 60000
 
 
-    def get_offset_seconds(self) -> float:
+    def get_offset_seconds(self) -> Decimal:
         '''Returns the offset in seconds.'''
         return self.offset / 1000
 
@@ -111,8 +128,8 @@ class Timing:
         timing_data = osu_timing.split(',')
 
         return cls(
-            offset = float(timing_data[0]),
-            bpm = cls.bpm(float(timing_data[1])),
+            offset = Decimal(timing_data[0]),
+            bpm = cls.bpm(Decimal(timing_data[1])),
             meter = (int(timing_data[2]), 4)
         )
 
@@ -161,8 +178,8 @@ class Timing:
             meter_denominator = int(timing_dict['Meter'])
         
         return cls(
-            offset = float(timing_dict['StartTime']),
-            bpm = float(timing_dict['Bpm']),
+            offset = Decimal(timing_dict['StartTime']),
+            bpm = Decimal(timing_dict['Bpm']),
             meter = (meter_denominator, 4)
         )
 
@@ -191,7 +208,7 @@ class TimingList():
     # supports .sm and .ssc
 
     @staticmethod
-    def from_stepmania(offset: float, sm_timings: list[str]) -> list[Timing]:
+    def from_stepmania(offset: Decimal, sm_timings: list[str]) -> list[Timing]:
         '''
         Takes a list of Stepmania timing points and creates a list of Timing instances from it.
         Works with .sm and .ssc formats.
@@ -205,11 +222,11 @@ class TimingList():
         [https://github.com/stepmania/stepmania/wiki/ssc]
         '''
         # convert the offset to milliseconds
-        time = offset * 1000 
+        time = Decimal(offset * 1000)
         res = []
         # turn the timings into usable data
         timings_split = [
-            [float(val) for val in t.split('=')]
+            [Decimal(val) for val in t.split('=')]
             for t in sm_timings
         ]
 
@@ -230,13 +247,15 @@ class TimingList():
         
 
     @staticmethod
-    def to_stepmania(timings: list[Timing]) -> tuple[str, str]:
+    def to_stepmania(timings: list[Timing], step: Decimal = STEP128) -> tuple[str, str]:
         '''
         Takes a list of Timing instances and returns a tuple of strings containing Stepmania #OFFSET and #BPM tags.
         Works with .sm and .ssc formats.
         NOTE: Only #BPMS is supported at the moment. #STOPS will be implemented in the future.
 
         - timings: list[Timing] | a list of Timing instances
+        - precision: Decimal | the step of the beat offset quantization. 
+            In some cases, a smaller step is preferrable, but in some others, you might be better off using 1/2nds or whole beats.
 
         Please read the Stepmania documentation for more info: 
         [https://github.com/stepmania/stepmania/wiki/sm]
@@ -247,14 +266,17 @@ class TimingList():
         
         # header
         header_tag = '#BPMS:'
-        total_beats = 0.0
+        total_beats = Decimal('0.0')
         
         # create list of beats
-        beat_list = [0.0]
-        for i in range(1, len(timings)):         
+        beat_list = [Decimal('0.0')]
+        for i in range(1, len(timings)):
             current_timing = timings[i]
         
-            total_beats += Timing.beat_amount(timings[i-1].bpm, (current_timing.offset - timings[i-1].offset))
+            total_beats += quantize_value(
+                Timing.beat_amount(timings[i-1].bpm, (current_timing.offset - timings[i-1].offset)),
+                step
+            )
             beat_list += [total_beats]
         
         # make header
@@ -262,7 +284,6 @@ class TimingList():
             header_tag += f'{beat_list[i]}={timings[i].bpm}\n,'
 
         header_tag = header_tag[:-1] + ';'
-
         return header_tag, offset_tag
 
 
