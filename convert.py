@@ -260,4 +260,4 @@ class Convert:
 
 
 if __name__ == '__main__':
-    print(Convert.to_quaver(Convert.from_quaver('test/qua/14509.qua')))
+    print(Convert.to_stepmania(Convert.from_osu("test/osu/Kashiwa Daisuke - Red Skirts (hehe) [Plaid Jazz].osu")))

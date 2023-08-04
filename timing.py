@@ -254,7 +254,7 @@ class TimingList():
         for i in range(1, len(timings)):         
             current_timing = timings[i]
         
-            total_beats += Timing.beat_amount(current_timing.bpm, current_timing.offset - timings[i-1].offset)
+            total_beats += Timing.beat_amount(timings[i-1].bpm, (current_timing.offset - timings[i-1].offset))
             beat_list += [total_beats]
         
         # make header
@@ -290,5 +290,5 @@ if __name__ == '__main__':
     # print(fr)
     # to = fr.to_quaver()
     # print(to)
-    
+
     pass
