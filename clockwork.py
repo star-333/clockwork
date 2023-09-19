@@ -37,11 +37,31 @@ from convert import Convert
 # sd2
 @click.option('--practice/--no-practice',
     is_flag = True,
-    help = 'If --out-format is sd2, turn the bookmarks into practice points (or not). Ignored if --out-format is not sd2.'
+    help = 'If -o is sd2, turn the bookmarks into practice points (or not). Ignored if --out-format is not sd2.'
+)
+
+# osu
+@click.option('--sample-set',
+    type = click.IntRange(0, 3, clamp=True),
+    required = False,
+    default = 0,
+    help = 'If -o is osu, use the provided sample_set value in timing points.'
+)
+@click.option('--sample-index',
+    type = int,
+    default = 0,
+    required = False,
+    help = 'If -o is osu, use the provided sample_index value in timing points.'
+)
+@click.option('--volume',
+    type = click.IntRange(0, 100),
+    default = 80,
+    required = False,
+    help = 'If -o is osu, use the provided volume value in timing points.'
 )
 
 # cli command
-def cli(input, in_format, out_format, show_result, practice):
+def cli(input, in_format, out_format, show_result, practice, volume, sample_set, sample_index):
 
     click.echo()
 
@@ -57,15 +77,17 @@ def cli(input, in_format, out_format, show_result, practice):
 
 
     # SECOND PASS: convert to file snippets
-    if out_format == 'osu': 
-        second_pass = Convert.to_osu(first_pass) # implement volume, sample_set, sample_index later
+    if out_format == 'osu':
+        second_pass = Convert.to_osu(first_pass, volume, sample_set, sample_index) # implement volume, sample_set, sample_index later
 
     elif out_format == 'stepmania':
         second_pass = Convert.to_stepmania(first_pass)
 
     elif out_format == 'sd2':
-        if practice: second_pass = Convert.to_sd2(first_pass, practice = True)
-        else: second_pass = Convert.to_sd2(first_pass)
+        if practice: 
+            second_pass = Convert.to_sd2(first_pass, practice = True)
+        else: 
+            second_pass = Convert.to_sd2(first_pass)
 
     elif out_format == 'quaver':
         second_pass = Convert.to_quaver(first_pass)
