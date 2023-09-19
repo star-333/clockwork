@@ -2,7 +2,7 @@
 A small CLI for timing conversion between various music games. Only Stepmania, osu! and Soundodger 2 are supported at the moment but I am planning to cover more in the future.
 
 ## Installation
-Clockwork can be installed with pip. To install, clone and move into the repository, and run the command:
+Clockwork can be installed with pip. To install, clone and move into the repository (or download the source code), and run the command:
 
 ```console
 $ pip install .
