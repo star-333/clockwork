@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name = 'clockwork',
-    version = '0.2.0',
+    version = '0.3.1',
     py_modules = ['clockwork', 'timing', 'convert'],
     install_requires = [
         'Click>=8.1.0', 
