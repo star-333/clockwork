@@ -1,11 +1,12 @@
 # MODULES
 import click
 import pyperclip
+from decimal import *
 from sys import platform
 from zenlog import log
 import re
 # local
-from timing import Timing, TimingList
+from timing import Timing, TimingList, STEP128
 
 
 
@@ -91,7 +92,6 @@ class Convert:
         for timing in osu_uninherited:
             timing_list.append(Timing.from_osu(timing))
 
-        # close .osu file
         f.close()
         return timing_list
 
@@ -115,7 +115,9 @@ class Convert:
         log.info('Successfully converted!')
 
         pyperclip.copy(res)
-        log.info('[TimingPoints] copied to clipboard.\nYou can paste it directly into your .osu, right after the [Events] section.\nBe careful to remove the previous [TimingPoints] section.')
+        log.info('[TimingPoints] copied to clipboard.')
+        log.info('You can paste it directly into your .osu, right after the [Events] section.')
+        log.info('Be careful to remove the previous [TimingPoints] section.')
 
         return res
 
@@ -140,7 +142,8 @@ class Convert:
         log.info('Successfully converted!')
         
         pyperclip.copy(res)
-        log.info('Bookmarks copied to clipboard.\nYou can paste them directly into your .xml, right after the <Editor ... /> element.')
+        log.info('Bookmarks copied to clipboard.')
+        log.info('You can paste them directly into your .xml, right after the "<Editor ... />" element.')
 
         return res
 
@@ -177,29 +180,85 @@ class Convert:
         bpm_rawstr = re.findall('#BPMS:[^;]*;', sm_content, re.DOTALL)[0]   # extract raw tag
         bpm_split = re.split('[,;:\s]', bpm_rawstr)                         # split tag
         bpm = [x for x in bpm_split if x][1:]                               # extract relevant items
-
+        
+        f.close()
         return TimingList.from_stepmania(float(offset), bpm)
     
 
     @staticmethod
-    def to_stepmania(timings: list[Timing]) -> str:
+    def to_stepmania(timings: list[Timing], step: Decimal = STEP128) -> str:
         '''
         Takes a list of Timing instances and generates a .sm/.ssc snippet with the corresponding bookmarks.
 
         - timings: list[Timings] | a list of Timing instances
+
+        Please read the Stepmania documentation for more info: 
+        [https://github.com/stepmania/stepmania/wiki/sm]
+        [https://github.com/stepmania/stepmania/wiki/ssc]
         '''
-        content = TimingList.to_stepmania(timings)
+        content = TimingList.to_stepmania(timings, step)
         res = f'{content[1]}\n{content[0]}'
         
         log.info('Successfully converted!')
         
         pyperclip.copy(res)
-        log.info('Tags copied to clipboard.\nYou can paste them directly into your .sm/.ssc, right at the end of the first section.\nBe careful to remove the previous tags.')
+        log.info('Tags copied to clipboard.')
+        log.info('You can paste them directly into your .sm/.ssc, right at the end of the first section.')
+        log.info('Be careful to remove the previous tags.')
+
+        return res
+
+    
+    ### QUAVER ###
+    @staticmethod
+    def from_quaver(input_path: str) -> list[Timing]:
+        '''
+        Takes a .qua file and returns a list of Timings accordingly.
+
+        - input_path: str | the path towards the .sm/.ssc file
+
+        Please read the Quaver API source code for more info:
+        [https://github.com/Quaver/Quaver.API/blob/master/Quaver.API/Maps/Qua.cs]
+        '''
+        check_format(input_path, 'qua')
+        f = open_file(input_path)
+
+        qua_content = f.read()
+
+        timings_rawstr = re.findall('TimingPoints.*SliderVelocities', qua_content, re.DOTALL)[0]        # extract raw string
+        timings_rawstr = re.sub('TimingPoints:\n', '', timings_rawstr)                                  # remove unnecessary info
+        timings_rawstr = re.sub('SliderVelocities', '', timings_rawstr)                                 # remove unnecessary info
+        timings_split = timings_rawstr.split('- ')[1:]
+        
+        f.close()
+        return [Timing.from_quaver(t) for t in timings_split]
+
+    
+    @staticmethod
+    def to_quaver(timings: list[Timing]) -> str:
+        '''
+        Takes a list of Timing instances and generates a .qua snippet with the corresponding bookmarks.
+
+        - timings: list[Timings] | a list of Timing instances
+
+        Please read the Quaver API source code for more info:
+        [https://github.com/Quaver/Quaver.API/blob/master/Quaver.API/Maps/Qua.cs]
+        '''
+        res = ''
+
+        for t in timings:
+            res += t.to_quaver()
+
+        log.info('Successfully converted!')
+        
+        pyperclip.copy(res)
+        log.info('Timings copied to clipboard.')
+        log.info('You can paste them directly into your .qua, right after the "SoundEffects: ..." element.')
+        log.info('Be careful to remove the previous timings.')
 
         return res
 
 
 
 if __name__ == '__main__':
-    print(Convert.from_stepmania('test/sm/STEP MACHINE.sm'))
-    print(Convert.to_stepmania(Convert.from_stepmania('test/sm/Otogibanashi ni makugire wo.sm')))
+    print(Convert.to_stepmania(Convert.from_quaver("test/qua/14509.qua"), Decimal('1.0')))

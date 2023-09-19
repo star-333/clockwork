@@ -1,12 +1,30 @@
 # MODULES
 import click
 import pyperclip
+from decimal import *
 from sys import platform
 from zenlog import log
 from typing import Callable
 
 # CONSTANTS
 SD2_COLOR = 'FFFFFF'
+STEP128 = Decimal('0.0078125')
+
+# DECIMAL CONTEXT
+# for 1/128 subdivisions. fuck 1/192ths they don't translate well into decimals
+getcontext().prec = 7
+
+
+
+# UTILS
+def quantize_value(val: Decimal, step: Decimal):
+    '''
+    Quantizes a given value based on step size.
+
+    - val: Decimal | the value to quantize.
+    - step: Decimal | the step size to use.
+    '''
+    return round(val / step, 0) * step
 
 
 
@@ -23,7 +41,7 @@ class Timing:
     This class contains constructors, methods as well as various utility functions.
     '''
 
-    def __init__(self, offset: float, bpm: float, meter: tuple[int, int] = (4,4)):
+    def __init__(self, offset: Decimal, bpm: Decimal, meter: tuple[int, int] = (4,4)):
         self.offset = offset
         self.bpm = bpm
         self.meter = meter
@@ -35,7 +53,7 @@ class Timing:
 
 
     @staticmethod
-    def bpm(beat_length: float, round_result: bool = True) -> float:
+    def bpm(beat_length: Decimal, round_result: bool = True) -> Decimal:
         '''
         Takes a beat length in ms and returns the corresponding BPM
 
@@ -48,7 +66,7 @@ class Timing:
             return 60000 / beat_length
 
     @staticmethod
-    def beat_length(bpm: float, beat_amount: float | int = 1) -> float:
+    def beat_length(bpm: Decimal, beat_amount: Decimal | int = 1) -> Decimal:
         '''
         Returns the length of one or more beats in ms.
 
@@ -59,7 +77,7 @@ class Timing:
 
 
     @staticmethod
-    def beat_amount(bpm: float, duration: float) -> float:
+    def beat_amount(bpm: Decimal, duration: Decimal) -> Decimal:
         '''
         Takes a duration in ms and returns the corresponding amount of beats for a given BPM.
 
@@ -69,7 +87,7 @@ class Timing:
         return (duration * bpm) / 60000
 
 
-    def get_offset_seconds(self) -> float:
+    def get_offset_seconds(self) -> Decimal:
         '''Returns the offset in seconds.'''
         return self.offset / 1000
 
@@ -99,7 +117,7 @@ class Timing:
     ### OSU ###
 
     @classmethod
-    def from_osu(cls, timing: str) -> Callable:
+    def from_osu(cls, osu_timing: str) -> Callable:
         '''
         Takes a single uninherited osu! timing and creates a single Timing instance from it.
 
@@ -107,11 +125,11 @@ class Timing:
 
         Please read the osu! documentation for more info: [https://osu.ppy.sh/wiki/en/Client/File_formats/osu_(file_format)#timing-points]
         ''' 
-        timing_data = timing.split(',')
+        timing_data = osu_timing.split(',')
 
         return cls(
-            offset = float(timing_data[0]),
-            bpm = cls.bpm(float(timing_data[1])),
+            offset = Decimal(timing_data[0]),
+            bpm = cls.bpm(Decimal(timing_data[1])),
             meter = (int(timing_data[2]), 4)
         )
 
@@ -134,6 +152,50 @@ class Timing:
         return f'{time},{beat_length},{meter},{sample_set},{sample_index},{volume},1,0'
 
 
+    ### QUAVER ###
+
+    @classmethod
+    def from_quaver(cls, qua_timing: str) -> Callable:
+        '''
+        Takes a single Quaver timing point and creates a single Timing instance from it.
+        '''
+        # split lines and strip unnecessary data
+        timing_data = [s.strip('- ') for s in qua_timing.split('\n')]
+        # remove empty strings
+        timing_data = [s.split(':') for s in timing_data if s]
+        # convert to dict (easier to work with)
+        timing_dict = {
+            x[0]: x[1].strip(' ')
+            for x in timing_data
+        }
+
+        # meter
+        if 'Meter' not in timing_dict:
+            meter_denominator = 4
+        elif timing_dict['Meter'] == 'Triple':
+            meter_denominator = 3
+        else:
+            meter_denominator = int(timing_dict['Meter'])
+        
+        return cls(
+            offset = Decimal(timing_dict['StartTime']),
+            bpm = Decimal(timing_dict['Bpm']),
+            meter = (meter_denominator, 4)
+        )
+
+
+    def to_quaver(self) -> str:
+        '''
+        Returns a string containing a single Quaver timing.
+        '''
+        res = f'- StartTime: {self.offset}\n  Bpm: {self.bpm}\n'
+        
+        if self.meter != (4, 4):
+            res += f'  Meter: {self.meter[0]}\n'
+
+        return res
+
+
 
 # TIMINGLIST CLASS
 class TimingList():
@@ -146,7 +208,7 @@ class TimingList():
     # supports .sm and .ssc
 
     @staticmethod
-    def from_stepmania(offset: float, str_timings: list[str]) -> list[Timing]:
+    def from_stepmania(offset: Decimal, sm_timings: list[str]) -> list[Timing]:
         '''
         Takes a list of Stepmania timing points and creates a list of Timing instances from it.
         Works with .sm and .ssc formats.
@@ -160,12 +222,12 @@ class TimingList():
         [https://github.com/stepmania/stepmania/wiki/ssc]
         '''
         # convert the offset to milliseconds
-        time = offset * 1000 
+        time = Decimal(offset * 1000)
         res = []
         # turn the timings into usable data
         timings_split = [
-            [float(val) for val in t.split('=')]
-            for t in str_timings
+            [Decimal(val) for val in t.split('=')]
+            for t in sm_timings
         ]
 
         # i have no idea why this works
@@ -185,13 +247,15 @@ class TimingList():
         
 
     @staticmethod
-    def to_stepmania(timings: list[Timing]) -> tuple[str, str]:
+    def to_stepmania(timings: list[Timing], step: Decimal = STEP128) -> tuple[str, str]:
         '''
         Takes a list of Timing instances and returns a tuple of strings containing Stepmania #OFFSET and #BPM tags.
         Works with .sm and .ssc formats.
         NOTE: Only #BPMS is supported at the moment. #STOPS will be implemented in the future.
 
         - timings: list[Timing] | a list of Timing instances
+        - precision: Decimal | the step of the beat offset quantization. 
+            In some cases, a smaller step is preferrable, but in some others, you might be better off using 1/2nds or whole beats.
 
         Please read the Stepmania documentation for more info: 
         [https://github.com/stepmania/stepmania/wiki/sm]
@@ -202,14 +266,17 @@ class TimingList():
         
         # header
         header_tag = '#BPMS:'
-        total_beats = 0.0
+        total_beats = Decimal('0.0')
         
         # create list of beats
-        beat_list = [0.0]
-        for i in range(1, len(timings)):         
+        beat_list = [Decimal('0.0')]
+        for i in range(1, len(timings)):
             current_timing = timings[i]
         
-            total_beats += Timing.beat_amount(current_timing.bpm, current_timing.offset - timings[i-1].offset)
+            total_beats += quantize_value(
+                Timing.beat_amount(timings[i-1].bpm, (current_timing.offset - timings[i-1].offset)),
+                step
+            )
             beat_list += [total_beats]
         
         # make header
@@ -217,24 +284,32 @@ class TimingList():
             header_tag += f'{beat_list[i]}={timings[i].bpm}\n,'
 
         header_tag = header_tag[:-1] + ';'
-
         return header_tag, offset_tag
 
 
 
 if __name__ == '__main__':
-    test_data = [
-        '0.000000=165.000000',
-        '32.000000=160.000000',
-        '33.000000=148.000000',
-        '34.000000=131.000000',
-        '36.000000=164.000000',
-        '39.000000=169.000000',
-        '40.500000=203.000000',
-    ]
+    # test_data = [
+    #     '0.000000=165.000000',
+    #     '32.000000=160.000000',
+    #     '33.000000=148.000000',
+    #     '34.000000=131.000000',
+    #     '36.000000=164.000000',
+    #     '39.000000=169.000000',
+    #     '40.500000=203.000000',
+    # ]
 
-    fr = TimingList.from_stepmania(0.0, test_data)
-    log.debug(fr)
+    # fr = TimingList.from_stepmania(0.0, test_data)
+    # log.debug(fr)
 
-    to = TimingList.to_stepmania(fr)
-    log.d(to)
+    # to = TimingList.to_stepmania(fr)
+    # log.d(to)
+
+    # test_data = '''StartTime: 2503\n Bpm: 148.02000427246094\n     Meter: 4\n'''
+
+    # fr = Timing.from_quaver(test_data)
+    # print(fr)
+    # to = fr.to_quaver()
+    # print(to)
+
+    pass
