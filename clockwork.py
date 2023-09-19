@@ -3,10 +3,11 @@
 # MODULES
 import click
 import pyperclip
+from decimal import *
 from sys import platform
 from zenlog import log
 # local
-from timing import Timing
+from timing import Timing, STEP128
 from convert import Convert
 
 
@@ -60,8 +61,16 @@ from convert import Convert
     help = 'If -o is osu, use the provided volume value in timing points.'
 )
 
+# stepmania
+@click.option('--step',
+    type = click.Choice(['1', '2', '4', '16', '32', '64', '128', '3', '6', '12', '24', '48', '96']),
+    default = '128',
+    required = False,
+    help = 'If -o is stepmania, use the following step value as a precision. For example, choosing 2 will yield bpm changes only on full and half notes.'
+)
+
 # cli command
-def cli(input, in_format, out_format, show_result, practice, volume, sample_set, sample_index):
+def cli(input, in_format, out_format, show_result, practice, volume, sample_set, sample_index, step):
 
     click.echo()
 
@@ -78,10 +87,10 @@ def cli(input, in_format, out_format, show_result, practice, volume, sample_set,
 
     # SECOND PASS: convert to file snippets
     if out_format == 'osu':
-        second_pass = Convert.to_osu(first_pass, volume, sample_set, sample_index) # implement volume, sample_set, sample_index later
+        second_pass = Convert.to_osu(first_pass, volume, sample_set, sample_index)
 
     elif out_format == 'stepmania':
-        second_pass = Convert.to_stepmania(first_pass)
+        second_pass = Convert.to_stepmania(first_pass, step=Decimal(1 / int(step)))
 
     elif out_format == 'sd2':
         if practice: 
