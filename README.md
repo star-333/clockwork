@@ -34,5 +34,5 @@ $ clockwork "test/sm/STEP MACHINE.sm" -i stepmania -o osu --show-result
 | `.xml` | Soundodger 2 | Partial | Only conversion from Soundodger 2 is missing, due to timing information being stored in a different header file. |
 
 ## To-do list
-- [ ] support for more file formats (`.bms` is on my watchlist. Feel free to suggest other formats!)
+- [ ] support for more file formats (`.bms`, `.adofai` are on my watchlist. Feel free to suggest other formats!)
 - [ ] direct injection of the timings into an already existing output file
